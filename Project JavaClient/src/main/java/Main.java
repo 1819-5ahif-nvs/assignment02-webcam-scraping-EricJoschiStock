@@ -18,7 +18,10 @@ import java.util.StringTokenizer;
 
 public class Main {
     private static Logger logger = Logger.getLogger(Main.class.getName());
-    public static void main(String args[]) throws IOException {
+    private static String oldsource;
+    private static boolean updated = false;
+
+    public static void main(String args[]) throws IOException, InterruptedException {
         try {
             logger.addAppender(new FileAppender(new SimpleLayout(),"./link.log"));
         } catch (IOException e) {
@@ -29,6 +32,18 @@ public class Main {
         server.createContext("/video",new VideoHandler());
         server.setExecutor(null);
         server.start();
+        for (;;){
+            System.out.println("Here");
+            Thread.sleep(1000*60);
+            if(updated){
+                updated = false;
+                server.stop(0);
+                server = HttpServer.create(new InetSocketAddress(8000), 0);
+                server.createContext("/video",new VideoHandler());
+                server.setExecutor(null);
+                server.start();
+            }
+        }
     }
 
     static String scrap(){
@@ -43,6 +58,10 @@ public class Main {
             e.printStackTrace();
         }
         logger.info(source);
+        if(oldsource == source){
+            updated = false;
+        }
+        oldsource = source;
         return source;
     }
 
